@@ -1,0 +1,1 @@
+rally task report  $(rally task list | grep -vi uuid | awk '{print $2}' | grep -v '^$') --type junit-xml --to ~/output.xml

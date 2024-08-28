@@ -1,0 +1,11 @@
+export OS_USERNAME=eaoicop
+export OS_TENANT_NAME=admin
+export NOVA_VERSION=1.1
+export OS_PROJECT_NAME=admin
+export OS_PASSWORD=eaoicop123
+export OS_NO_CACHE=True
+export COMPUTE_API_VERSION=1.1
+export no_proxy=,131.160.194.20,10.148.52.10
+export OS_CLOUDNAME=overcloud
+export OS_AUTH_URL=http://131.160.194.20:5000/v2.0
+export PYTHONWARNINGS="ignore:Certificate has no, ignore:A true SSLContext object is not available"

@@ -1,0 +1,93 @@
+FROM ubuntu:20.04
+
+USER root
+RUN export DEBIAN_FRONTEND=noninteractive && \
+apt-get update && apt-get install tzdata -qy && \
+ln -fs /usr/share/zoneinfo/Europe/Dublin /etc/localtime && \
+dpkg-reconfigure --frontend noninteractive tzdata && \
+echo "Europe/Dublin" > /etc/timezone && \
+#Make sure the package repository is up to date
+apt-get -qy full-upgrade && \
+apt-get install -qy git && \
+# Install a basic SSH server for Jenkins docker plugin
+apt-get install -qy openssh-server && \
+sed -i 's|session    required     pam_loginuid.so|session    optional     pam_loginuid.so|g' /etc/pam.d/sshd && \
+mkdir -p /var/run/sshd && \
+# Install JDK 8 for Jenkins docker plugin
+apt-get install -qy openjdk-8-jdk && \
+# Install other tools
+apt-get install -qy  python3-pip wget curl unzip tar gzip sshpass vim rsync libffi-dev libssl-dev && \
+# Add user jenkins to the image
+adduser --quiet lciadm100 && \
+# Set password for the jenkins user
+echo "lciadm100:ericsson123" | chpasswd
+
+
+
+
+# Copy files to set up ssh for gerrit
+RUN mkdir /home/lciadm100/.ssh
+COPY config /home/lciadm100/.ssh/config
+COPY id_rsa /home/lciadm100/.ssh/id_rsa
+COPY id_rsa.pub /home/lciadm100/.ssh/id_rsa.pub
+ 
+RUN chown lciadm100:lciadm100 /home/lciadm100/.ssh/id_rsa.pub /home/lciadm100/.ssh/id_rsa /home/lciadm100/.ssh/config /home/lciadm100/.ssh && \
+chmod 644 /home/lciadm100/.ssh/id_rsa.pub && \
+chmod 600 /home/lciadm100/.ssh/id_rsa && \
+chmod 700 /home/lciadm100/.ssh
+
+
+
+
+
+RUN sed -i s/^deb-src.*// /etc/apt/sources.list
+
+RUN apt-get update && apt-get install --yes sudo python3-dev python3-pip vim git-core libffi-dev && \
+    pip3 install --upgrade pip && \
+    useradd -u 65500 -m rally && \
+    usermod -aG sudo rally && \
+    echo "rally ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/00-rally-user && \
+    mkdir /rally && chown -R rally:rally /rally
+
+
+RUN ls
+RUN pip3 install rally-openstack
+
+
+
+
+
+RUN mkdir -p /etc/rally && \
+    echo "[database]" > /etc/rally/rally.conf && \
+    echo "connection=sqlite:////home/rally/.rally/rally.db" >> /etc/rally/rally.conf
+
+# Cleanup pip
+RUN rm -rf /root/.cache/
+
+USER rally
+ENV HOME /home/rally
+RUN  mkdir -p /home/rally/.rally && rally db recreate
+RUN  mkdir -p /home/rally/.rally/plugins
+RUN chmod -R 777 /home/rally/
+
+RUN ls
+USER root
+RUN /usr/bin/ssh-keygen -A
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

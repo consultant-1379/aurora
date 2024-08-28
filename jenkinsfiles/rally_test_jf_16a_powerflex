@@ -1,0 +1,63 @@
+pipeline {
+  agent {
+      label 'rally_jenkins_agent'
+  }
+  // The options directive is for configuration that applies to the whole job.
+  options {
+    buildDiscarder(logRotator(numToKeepStr:'90')) 
+    timestamps()
+  }
+  tools {
+    jdk 'JDK 1.8.0_101 vApp'
+    maven 'Maven 3.0.5'
+  }
+  stages {
+    stage('Clone aurora repo and copy files to rally directories'){
+      steps {
+        sh "rally db recreate; mkdir -p ~/.rally/plugins ; cp  ~/workspace/rally_cloud_verification/rally/plugins/* ~/.rally/plugins ; mkdir -p /home/lciadm100/workspace/rally_cloud_verification/reportdir"
+
+      }
+    }
+    stage('Create Deployment') {
+      steps {
+        sh "rally deployment create --file ~/workspace/rally_cloud_verification/deployments/${cloud}.json --name ${cloud}"
+      }
+    }
+    stage('Run Rally') {
+      steps {
+
+      catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+                     sh '''
+        rally task start ~/workspace/rally_cloud_verification/rally/tasks/cloud_install_tasks.yaml --task-args "{'network_id': '${network_id}', 'cinder_nova_times': ${cinder_nova_times}, 'cinder_nova_concurrency': ${cinder_nova_concurrency}, 'ephemeral_times' : ${ephemeral_times}, 'ephemeral_concurrency': ${ephemeral_concurrency}, 'image_name': ${image_name},'cinder_nova_vol_image_times': ${cinder_nova_vol_image_times}, 'cinder_nova_vol_image_concurrency': ${cinder_nova_vol_image_concurrency}, 'cinder_nova_server_context_times': ${cinder_nova_server_context_times}, 'cinder_nova_server_context_concurrency': ${cinder_nova_server_context_concurrency}, }"
+           '''
+                }
+
+      }
+    }
+    stage('Generate Report') {
+      steps {
+	sh ''' 
+        rally task report $(rally task list | grep -vi uuid | awk '{print $2}' | grep -v '^$') --out /home/lciadm100/workspace/rally_cloud_verification/reportdir/report.html
+        ls /home/lciadm100/workspace/rally_cloud_verification/reportdir
+	''' 
+	}
+	
+	post {
+         always {
+	   publishHTML target: [
+            allowMissing: false,
+            alwaysLinkToLastBuild: false,
+            includes: '**/*',
+	    keepAll: true,
+            reportDir: 'reportdir/',
+            reportFiles: 'report.html',
+            reportName: 'Rally Report'
+          ]
+    	}
+       }
+    }
+
+  }
+
+}
+

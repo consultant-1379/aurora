@@ -1,0 +1,9 @@
+networkid: "32d6fdc6-6c28-44c3-a4e6-ff2b4c1d3c48"
+image_name: "cirros"
+flavor_name: "m1.tiny"
+size: 1
+users_per_tenant: 2
+tenants: 1
+subport_count: 2
+availability_zone: "nova"
+

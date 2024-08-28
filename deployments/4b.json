@@ -1,0 +1,23 @@
+{
+    "openstack": {
+        "auth_url": "https://cloud4b.athtem.eei.ericsson.se:13000/v3",
+        "region_name": "regionOne",
+        "endpoint_type": "public",
+        "admin": {
+            "username": "stackcentric",
+            "password": "stackcentric123!",
+            "user_domain_name": "Default",
+            "project_name": "admin",
+            "project_domain_name": "default"
+        },
+        "https_insecure": false,
+        "https_cacert": "",
+        "api_info":{
+            "cinder": {
+                "version": "3",
+                "service_type": "volumev3"
+            }
+        }
+    }
+}
+

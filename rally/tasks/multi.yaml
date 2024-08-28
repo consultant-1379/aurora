@@ -1,0 +1,41 @@
+---
+  ScenarioPlugin.cinder_storage_four:
+    - args:
+        flavor:
+          name: gig
+
+        image:
+          name: "cirros"
+        size: 1
+        network_create_args: { }
+        subport_count: 2
+        boot_server_kwargs: {}
+        auto_assign_nic: True
+        nics:
+          - net-id: "{{networkid}}"
+        create_volume_params:
+          availability_zone: "nova"
+      runner:
+        type: "constant"
+        times: 2
+        concurrency: 2
+
+
+      context:
+        users:
+          tenants: 1 
+          users_per_tenant: 2
+          user_choice_method: "round_robin"
+
+
+
+        flavors:
+          - name: gig
+            ram: 6024
+            disk: 4
+            vcpus: 4
+
+      sla:
+        failure_rate:
+          max: 0
+
